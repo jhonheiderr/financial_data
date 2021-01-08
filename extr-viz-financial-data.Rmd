@@ -91,7 +91,7 @@ ggplot(data = data, aes(x = dt)) +
   geom_line( aes(y = ITUB4, colour = "ITUB4")) + 
   geom_line( aes(y = ABEV3, colour = "ABEV3")) + 
   geom_line( aes(y = VALE3, colour = "VALE3")) +
-  ggtitle("Ações do IBOVESPA")+
+  ggtitle("Série histórica das ações\ndo Itaú, Ambev e Vale entre 2012 e 2021")+
   ylab("Preço de fechamento") +
   scale_colour_manual("", breaks = c("ITUB4", "ABEV3", "VALE3"),values = c("blue", "red", "green")) +
   theme(plot.title = element_text(lineheight = .8, face = "bold", size = 20)) +
