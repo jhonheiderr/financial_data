@@ -1,0 +1,124 @@
+---
+title: "prev_acoesIBOV"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Pacotes: 
+```{r}
+#install.packages('BatchGetSymbols')
+#install.packages('BETS')
+#install.packages('GetDFPData')
+#install.packages('GetHFData')
+#install.packages('GetTDData')
+#install.packages("writexl")
+#install.packages("readxl")
+#install.packages("quantmod")
+#install.packages("ggplot2")
+#install.packages("Quandl")
+#install.packages("dplyr")
+#install.packages("jsonlite")
+library(BatchGetSymbols)
+library(BETS)
+library(GetDFPData)
+#library(GetHFData)
+library(GetTDData)
+library(jsonlite)
+library(quantmod)
+library(ggplot2)
+library(writexl)
+library(readxl)
+library(Quandl)
+library(dplyr)
+library(devtools)
+library(dygraphs)
+```
+
+
+Para informações soubre um grupo específico de empresas (Lembrando, toda ação brasileira tem .SA no final e todo índice tem ^ no início)
+```{r}
+##Set Tickers
+my.tickers <- c('ITUB4.SA', 'BBDC4.SA', 'VALE3.SA', 'PETR4.SA', 'ABEV3.SA')
+View(my.tickers)
+str(my.tickers)
+##Set Dates and other Inputs
+first.date <- '2012-01-01'
+last.date <- '2021-01-01'
+thresh.bad.data <- 0.98
+bench.ticker <- '^BVSP'
+cache.folder <- 'Dissertação'
+
+Exemplo1 <- BatchGetSymbols(tickers = my.tickers, 
+                         first.date = first.date,
+                         last.date = last.date,
+                         bench.ticker = bench.ticker,
+                         thresh.bad.data = thresh.bad.data,
+                         cache.folder = cache.folder,
+                         do.fill.missing.prices = FALSE)
+                      
+
+View(Exemplo1$df.tickers)
+View(Exemplo1$df.control)
+
+```
+
+Concatenando os preços de fechamento de cada empresa em um data frame
+
+```{r}
+df = Exemplo1$df.tickers
+
+dt = df$ref.date
+ITUB4 = df[which(df$ticker=='ITUB4.SA'),4]
+ABEV3 = df[which(df$ticker=='ABEV3.SA'),4]
+VALE3 = df[which(df$ticker=='VALE3.SA'),4]
+
+data = data.frame(dt, ITUB4, ABEV3, VALE3)
+data = na.omit(data)
+
+View(data)
+
+```
+
+
+Visualizando os dados utilizando o ggplot2. 
+
+```{r}
+ggplot(data = data, aes(x = dt)) +
+  geom_line( aes(y = ITUB4, colour = "ITUB4")) + 
+  geom_line( aes(y = ABEV3, colour = "ABEV3")) + 
+  geom_line( aes(y = VALE3, colour = "VALE3")) +
+  ggtitle("Ações do IBOVESPA")+
+  ylab("Preço de fechamento") +
+  scale_colour_manual("", breaks = c("ITUB4", "ABEV3", "VALE3"),values = c("blue", "red", "green")) +
+  theme(plot.title = element_text(lineheight = .8, face = "bold", size = 20)) +
+  theme(axis.title.x = element_blank(),text = element_text(size=18), panel.background = element_rect(fill = "white", colour = "black"), panel.grid.major.x = element_blank(), 
+        panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "gray"),
+        panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "gray")) 
+
+
+```
+
+
+Visualizando os dados em HTML utilizando o pacote 'dygraph'.
+```{r}
+
+data = xts(data[,-1], order.by = data[,1])
+
+dygraph(data, main = "") %>%
+  dySeries(strokeWidth = 2, label = "Itaú", color = "#2b8cbe" ) %>%
+  dySeries(strokeWidth = 2, label = "Bradesco", color = "#f03b20" ) %>%
+  dySeries(strokeWidth = 2, label = "Vale", color = "#31a354" ) %>%
+  dyAxis("y",label = "Preço de fechamento") %>%
+  dyAxis("x",drawGrid = FALSE,) %>%
+  dyLegend(show = "follow") %>%
+  dyOptions() %>%
+  dyRangeSelector()
+
+
+```
+
+
